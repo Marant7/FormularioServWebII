@@ -1,0 +1,11 @@
+node_modules/
+dist/
+/.cache
+/.DS_Store
+npm-debug.log*
+.env
+/.idea
+/.vscode
+package-lock.json
+/*.log
+docs/
