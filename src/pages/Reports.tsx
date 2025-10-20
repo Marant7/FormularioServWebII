@@ -195,8 +195,6 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
         </button>
       </div>
 
-      <div ref={reportRef}>
-
       {/* Historial Completo de Solicitudes - ARRIBA */}
       <div style={{ marginTop: 32, marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -205,7 +203,7 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           </h3>
         </div>
 
-        {/* Buscador y Filtros */}
+        {/* Buscador y Filtros - FUERA del PDF */}
         <div style={{ 
           display: 'flex', 
           gap: 12, 
@@ -360,11 +358,27 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
         )}
       </div>
       
+      {/* Contenido para PDF - Empieza aquí */}
+      <div ref={reportRef} style={{ background: '#fff', padding: '20px' }}>
+        
+        {/* Título del Reporte */}
+        <div style={{ marginBottom: 24, borderBottom: '3px solid var(--accent)', paddingBottom: 12 }}>
+          <h2 style={{ margin: 0, color: 'var(--accent)' }}>
+            Reporte de {historialTab === 'servidores' ? 'Servidores' : 'Kits Arduino'}
+          </h2>
+          <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem', color: 'var(--text-light)' }}>
+            Generado: {new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {filtroSemestre && ` | Semestre: ${filtroSemestre}`}
+          </p>
+        </div>
+
       {/* Stats Cards - SERVIDORES */}
-      <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: '1.25rem', fontWeight: 600, color: 'var(--primary)' }}>
-        Solicitudes de Servidores
-      </h3>
-      <div className="stats">
+      {historialTab === 'servidores' && (
+        <>
+          <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: '1.25rem', fontWeight: 600, color: 'var(--primary)' }}>
+            Estadísticas de Servidores
+          </h3>
+          <div className="stats">
         <div className="stat">
           <strong>{stats.total}</strong>
           <div>Total de Solicitudes</div>
@@ -382,12 +396,16 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           <div>Rechazadas</div>
         </div>
       </div>
+        </>
+      )}
 
       {/* Stats Cards - ARDUINO */}
-      <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: '1.25rem', fontWeight: 600, color: 'var(--primary)' }}>
-        Solicitudes de Kits Arduino
-      </h3>
-      <div className="stats">
+      {historialTab === 'arduino' && (
+        <>
+          <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: '1.25rem', fontWeight: 600, color: 'var(--primary)' }}>
+            Estadísticas de Kits Arduino
+          </h3>
+          <div className="stats">
         <div className="stat">
           <strong>{statsArduino.total}</strong>
           <div>Total de Solicitudes</div>
@@ -405,6 +423,8 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           <div>Rechazadas</div>
         </div>
       </div>
+        </>
+      )}
 
       {/* Gráficos */}
       <div style={{ 
@@ -509,7 +529,8 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           </ResponsiveContainer>
         </div>
       )}
-      </div>
+      
+      </div> {/* Fin del contenido para PDF */}
     </div>
   )
 }
