@@ -12,10 +12,10 @@ export default function Authorization({
 }: { 
   requests: RequestItem[]
   arduinoRequests: any[]
-  onApprove: (id: string) => void
-  onReject: (id: string) => void
-  onApproveArduino: (id: string) => void
-  onRejectArduino: (id: string) => void
+  onApprove: (id: string, razon?: string) => void
+  onReject: (id: string, razon: string) => void
+  onApproveArduino: (id: string, razon?: string) => void
+  onRejectArduino: (id: string, razon: string) => void
 }) {
   const [selected, setSelected] = useState<RequestItem | any | null>(null)
   const [open, setOpen] = useState(false)
@@ -75,9 +75,9 @@ export default function Authorization({
     }
     
     if (rejectType === 'servidor') {
-      onReject(rejectId)
+      onReject(rejectId, razonRechazo)
     } else {
-      onRejectArduino(rejectId)
+      onRejectArduino(rejectId, razonRechazo)
     }
     
     setRejectModalOpen(false)

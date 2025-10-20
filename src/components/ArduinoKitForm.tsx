@@ -32,9 +32,9 @@ interface ArduinoKitFormData {
 }
 
 const kitsDisponibles = [
-  { nombre: 'Kit Arduino Uno R3-2', descripcion: 'Incluye Arduino Uno R3, sensores básicos, LEDs' },
-  { nombre: 'Kit Arduino Uno R3-3', descripcion: 'Incluye Arduino Uno R3, módulo WiFi, sensores avanzados' },
-  { nombre: 'Kit Arduino Uno R3-4', descripcion: 'Incluye Arduino Mega, pantalla LCD, múltiples sensores' }
+  { nombre: 'Kit Arduino Uno R3-2' },
+  { nombre: 'Kit Arduino Uno R3-3' },
+  { nombre: 'Kit Arduino Uno R3-4' }
 ]
 
 const personalSoporte = [

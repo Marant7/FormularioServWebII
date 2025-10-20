@@ -126,6 +126,7 @@ export default function App() {
     try {
       const newRequest = await api.createArduinoRequest(data)
       console.log('Solicitud de Arduino creada:', newRequest)
+      await loadRequests() // Recargar solicitudes después de crear
       setView('mis-solicitudes')
       alert('✅ Solicitud de Kit Arduino creada exitosamente')
     } catch (err: any) {
@@ -136,11 +137,10 @@ export default function App() {
     }
   }
 
-  const handleApprove = async (id: string) => {
-    const razon = prompt('Razón de aprobación (opcional):')
+  const handleApprove = async (id: string, razon?: string) => {
     setLoading(true)
     try {
-      await api.authorizeRequest(id, 'APROBADA', razon || undefined)
+      await api.authorizeRequest(id, 'APROBADA', razon)
       await loadRequests()
       alert('✅ Solicitud aprobada')
     } catch (err: any) {
@@ -150,12 +150,7 @@ export default function App() {
     }
   }
 
-  const handleReject = async (id: string) => {
-    const razon = prompt('Razón del rechazo (requerida):')
-    if (!razon) {
-      alert('La razón es requerida para rechazar')
-      return
-    }
+  const handleReject = async (id: string, razon: string) => {
     setLoading(true)
     try {
       await api.authorizeRequest(id, 'RECHAZADA', razon)
@@ -168,11 +163,10 @@ export default function App() {
     }
   }
 
-  const handleApproveArduino = async (id: string) => {
-    const razon = prompt('Razón de aprobación (opcional):')
+  const handleApproveArduino = async (id: string, razon?: string) => {
     setLoading(true)
     try {
-      await api.authorizeArduinoRequest(id, 'APROBADA', razon || undefined)
+      await api.authorizeArduinoRequest(id, 'APROBADA', razon)
       await loadRequests()
       alert('✅ Solicitud de Arduino aprobada')
     } catch (err: any) {
@@ -182,12 +176,7 @@ export default function App() {
     }
   }
 
-  const handleRejectArduino = async (id: string) => {
-    const razon = prompt('Razón del rechazo (requerida):')
-    if (!razon) {
-      alert('La razón es requerida para rechazar')
-      return
-    }
+  const handleRejectArduino = async (id: string, razon: string) => {
     setLoading(true)
     try {
       await api.authorizeArduinoRequest(id, 'RECHAZADA', razon)
