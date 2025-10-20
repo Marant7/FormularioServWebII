@@ -32,9 +32,9 @@ interface ArduinoKitFormData {
 }
 
 const kitsDisponibles = [
-  'Kit Arduino Uno R3-2',
-  'Kit Arduino Uno R3-3',
-  'Kit Arduino Uno R3-4'
+  { nombre: 'Kit Arduino Uno R3-2', descripcion: 'Incluye Arduino Uno R3, sensores básicos, LEDs' },
+  { nombre: 'Kit Arduino Uno R3-3', descripcion: 'Incluye Arduino Uno R3, módulo WiFi, sensores avanzados' },
+  { nombre: 'Kit Arduino Uno R3-4', descripcion: 'Incluye Arduino Mega, pantalla LCD, múltiples sensores' }
 ]
 
 const personalSoporte = [
@@ -47,13 +47,13 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
   const [formData, setFormData] = useState<ArduinoKitFormData>({
     docenteResponsable: '',
     curso: '',
-    semestre: '',
+    semestre: '2025-II',  // Por defecto 2025-II
     temaProyecto: '',
     fecha: '',
     horaEntrada: '',
     horaSalida: '',
     kitArduino: '',
-    estadoKit: 'completo',
+    estadoKit: 'especifico',  // Por defecto específico (no marcar todos)
     componentesIncluidos: {
       microcontroladorWifi: { incluido: false, cantidad: 1 },
       microcontroladorPlaca: { incluido: false, cantidad: 1 },
@@ -76,6 +76,7 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
   })
 
   const [nuevoIntegrante, setNuevoIntegrante] = useState('')
+  const [codigoIntegrante, setCodigoIntegrante] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -123,9 +124,15 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
   }
 
   const agregarIntegrante = () => {
-    if (nuevoIntegrante.trim()) {
-      setFormData({ ...formData, integrantes: [...formData.integrantes, nuevoIntegrante] })
+    if (nuevoIntegrante.trim() && codigoIntegrante.trim()) {
+      setFormData({ 
+        ...formData, 
+        integrantes: [...formData.integrantes, `${codigoIntegrante} - ${nuevoIntegrante}`] 
+      })
       setNuevoIntegrante('')
+      setCodigoIntegrante('')
+    } else {
+      alert('Complete el código y nombre del integrante')
     }
   }
 
@@ -373,7 +380,9 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
         >
           <option value="">Seleccione un kit</option>
           {kitsDisponibles.map(kit => (
-            <option key={kit} value={kit}>{kit}</option>
+            <option key={kit.nombre} value={kit.nombre}>
+              {kit.nombre} - {kit.descripcion}
+            </option>
           ))}
         </select>
         <label>Estado del Kit</label>
@@ -496,16 +505,22 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
       {/* Integrantes */}
       <div className="row vertical">
         <label>Integrantes del equipo</label>
-        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr auto', gap: '8px', width: '100%', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={codigoIntegrante}
+            onChange={(e) => setCodigoIntegrante(e.target.value)}
+            placeholder="Código"
+            maxLength={10}
+          />
           <input
             type="text"
             value={nuevoIntegrante}
             onChange={(e) => setNuevoIntegrante(e.target.value)}
-            placeholder="Nombre del integrante"
-            style={{ flex: 1 }}
+            placeholder="Nombre completo del integrante"
           />
           <button type="button" onClick={agregarIntegrante} className="small primary">
-            Agregar Integrante
+            Agregar
           </button>
         </div>
         {formData.integrantes.length > 0 && (
