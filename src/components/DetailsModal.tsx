@@ -9,12 +9,7 @@ interface DetailsModalProps {
 }
 
 export default function DetailsModal({ open, onClose, request, type = 'servidor' }: DetailsModalProps) {
-  console.log('DetailsModal - open:', open, 'request:', request, 'type:', type)
-  
-  if (!open || !request) {
-    console.log('Modal not opening - open:', open, 'request:', request)
-    return null
-  }
+  if (!open || !request) return null
 
   const isArduino = type === 'arduino' || request.kitArduino
 
@@ -415,8 +410,13 @@ export default function DetailsModal({ open, onClose, request, type = 'servidor'
             }}>
               {request.integrantes && request.integrantes.length > 0 ? (
                 <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.875rem', color: 'var(--text)' }}>
-                  {request.integrantes.map((integrante: string, i: number) => (
-                    <li key={i} style={{ marginBottom: '4px' }}>{integrante}</li>
+                  {request.integrantes.map((integrante: any, i: number) => (
+                    <li key={i} style={{ marginBottom: '4px' }}>
+                      {typeof integrante === 'string' 
+                        ? integrante 
+                        : `${integrante.codigo || ''} - ${integrante.nombre || integrante.rol || JSON.stringify(integrante)}`
+                      }
+                    </li>
                   ))}
                 </ul>
               ) : (

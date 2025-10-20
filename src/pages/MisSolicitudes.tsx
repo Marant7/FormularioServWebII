@@ -25,7 +25,6 @@ export default function MisSolicitudes({
   const rechazadasArduino = arduinoRequests.filter((r) => r.status === 'RECHAZADA').length
 
   function openDetails(r: RequestItem | any, type: 'servidor' | 'arduino') {
-    console.log('Opening details for:', r, 'type:', type)
     setSelected(r)
     setModalType(type)
     setOpen(true)
