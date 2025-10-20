@@ -34,9 +34,8 @@ router.get('/', authenticateToken, async (req, res) => {
         orderBy: { createdAt: 'desc' }
       });
     } else if (user.role === 'SOPORTE') {
-      // El soporte ve todas las solicitudes pendientes
+      // El soporte ve todas las solicitudes (para el historial completo)
       solicitudes = await prisma.arduinoRequest.findMany({
-        where: { status: 'PENDIENTE' },
         include: {
           estudiante: {
             select: { nombre: true, email: true }
