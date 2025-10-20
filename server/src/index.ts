@@ -10,7 +10,7 @@ import reportRoutes from './routes/reports';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Middlewares
 app.use(cors({
@@ -32,12 +32,32 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/arduino-requests', arduinoRequestRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Ruta de prueba
+// Ruta de prueba / healthcheck
 app.get('/', (req, res) => {
-  res.json({ message: 'API del Sistema de Solicitudes funcionando ✅' });
+  res.json({ 
+    message: 'API del Sistema de Solicitudes funcionando ✅',
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Manejo de errores global
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: 'Error interno del servidor',
+    message: err.message 
+  });
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Database: ${process.env.DATABASE_URL ? 'Conectado' : 'NO CONECTADO'}`);
 });
