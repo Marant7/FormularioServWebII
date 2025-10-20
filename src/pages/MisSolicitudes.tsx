@@ -9,9 +9,9 @@ export default function MisSolicitudes({
   requests: RequestItem[]
   arduinoRequests: any[]
 }) {
-  const [selected, setSelected] = React.useState<RequestItem | null>(null)
-  const [selectedArduino, setSelectedArduino] = React.useState<any | null>(null)
+  const [selected, setSelected] = React.useState<RequestItem | any | null>(null)
   const [open, setOpen] = React.useState(false)
+  const [modalType, setModalType] = React.useState<'servidor' | 'arduino'>('servidor')
   const [tab, setTab] = React.useState<'servidores' | 'arduino'>('servidores')
 
   // Stats para servidores
@@ -24,15 +24,9 @@ export default function MisSolicitudes({
   const aprobadasArduino = arduinoRequests.filter((r) => r.status === 'APROBADA').length
   const rechazadasArduino = arduinoRequests.filter((r) => r.status === 'RECHAZADA').length
 
-  function openDetails(r: RequestItem) {
+  function openDetails(r: RequestItem | any, type: 'servidor' | 'arduino') {
     setSelected(r)
-    setSelectedArduino(null)
-    setOpen(true)
-  }
-
-  function openArduinoDetails(r: any) {
-    setSelectedArduino(r)
-    setSelected(null)
+    setModalType(type)
     setOpen(true)
   }
 
@@ -152,7 +146,7 @@ export default function MisSolicitudes({
                       )}
                     </td>
                     <td>
-                      <button className="small" onClick={() => openDetails(r)}>
+                      <button className="small" onClick={() => openDetails(r, 'servidor')}>
                         Ver Detalles
                       </button>
                     </td>
@@ -219,7 +213,7 @@ export default function MisSolicitudes({
                       )}
                     </td>
                     <td>
-                      <button className="small" onClick={() => openArduinoDetails(r)}>
+                      <button className="small" onClick={() => openDetails(r, 'arduino')}>
                         Ver Detalles
                       </button>
                     </td>
@@ -231,7 +225,7 @@ export default function MisSolicitudes({
         </>
       )}
 
-      <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} />
+      <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} type={modalType} />
     </div>
   )
 }

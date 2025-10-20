@@ -17,10 +17,20 @@ export default function Authorization({
   onApproveArduino: (id: string) => void
   onRejectArduino: (id: string) => void
 }) {
-  const [selected, setSelected] = useState<RequestItem | null>(null)
-  const [selectedArduino, setSelectedArduino] = useState<any | null>(null)
+  const [selected, setSelected] = useState<RequestItem | any | null>(null)
   const [open, setOpen] = useState(false)
+  const [modalType, setModalType] = useState<'servidor' | 'arduino'>('servidor')
   const [tab, setTab] = useState<'servidores' | 'arduino'>('servidores')
+  const [userName, setUserName] = useState<string>('')
+
+  // Obtener nombre del usuario actual
+  React.useEffect(() => {
+    const user = localStorage.getItem('user')
+    if (user) {
+      const userData = JSON.parse(user)
+      setUserName(userData.nombre || userData.email)
+    }
+  }, [])
 
   const totalServ = requests.length
   const pendientesServ = requests.filter((r) => r.status === 'PENDIENTE').length
@@ -32,14 +42,34 @@ export default function Authorization({
   const aprobadasArduino = arduinoRequests.filter((r) => r.status === 'APROBADA').length
   const rechazadasArduino = arduinoRequests.filter((r) => r.status === 'RECHAZADA').length
 
-  function openDetails(r: RequestItem) {
+  function openDetails(r: RequestItem, type: 'servidor' | 'arduino') {
     setSelected(r)
+    setModalType(type)
     setOpen(true)
   }
 
-  function openArduinoDetails(r: any) {
-    setSelectedArduino(r)
-    setOpen(true)
+  function handleApprove(id: string, type: 'servidor' | 'arduino') {
+    const razon = prompt(`Autorizado por: ${userName}\n\n¿Desea agregar alguna observación? (opcional)`)
+    if (razon !== null) { // null significa que canceló
+      if (type === 'servidor') {
+        onApprove(id)
+      } else {
+        onApproveArduino(id)
+      }
+    }
+  }
+
+  function handleReject(id: string, type: 'servidor' | 'arduino') {
+    const razon = prompt(`Rechazado por: ${userName}\n\nIndique el motivo del rechazo:`)
+    if (razon && razon.trim()) {
+      if (type === 'servidor') {
+        onReject(id)
+      } else {
+        onRejectArduino(id)
+      }
+    } else if (razon !== null) {
+      alert('Debe indicar un motivo para rechazar la solicitud')
+    }
   }
 
   return (
@@ -132,13 +162,13 @@ export default function Authorization({
                     )}
                   </td>
                   <td>
-                    <button className="small" onClick={() => openDetails(r)}>Ver Detalles</button>
+                    <button className="small" onClick={() => openDetails(r, 'servidor')}>Ver Detalles</button>
                     {r.status === 'PENDIENTE' && (
                       <>
-                        <button className="small primary" onClick={() => onApprove(r.id)} style={{ marginLeft: 4 }}>
+                        <button className="small primary" onClick={() => handleApprove(r.id, 'servidor')} style={{ marginLeft: 4 }}>
                           Aprobar
                         </button>
-                        <button className="small danger" onClick={() => onReject(r.id)} style={{ marginLeft: 4 }}>
+                        <button className="small danger" onClick={() => handleReject(r.id, 'servidor')} style={{ marginLeft: 4 }}>
                           Rechazar
                         </button>
                       </>
@@ -204,13 +234,13 @@ export default function Authorization({
                     )}
                   </td>
                   <td>
-                    <button className="small" onClick={() => openArduinoDetails(r)}>Ver Detalles</button>
+                    <button className="small" onClick={() => openDetails(r, 'arduino')}>Ver Detalles</button>
                     {r.status === 'PENDIENTE' && (
                       <>
-                        <button className="small primary" onClick={() => onApproveArduino(r.id)} style={{ marginLeft: 4 }}>
+                        <button className="small primary" onClick={() => handleApprove(r.id, 'arduino')} style={{ marginLeft: 4 }}>
                           Aprobar
                         </button>
-                        <button className="small danger" onClick={() => onRejectArduino(r.id)} style={{ marginLeft: 4 }}>
+                        <button className="small danger" onClick={() => handleReject(r.id, 'arduino')} style={{ marginLeft: 4 }}>
                           Rechazar
                         </button>
                       </>
@@ -223,7 +253,7 @@ export default function Authorization({
         </table>
       )}
 
-      <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} />
+      <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} type={modalType} />
     </div>
   )
 }

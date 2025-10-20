@@ -10,6 +10,8 @@ const COLORS = {
 
 export default function Reports({ requests, arduinoRequests }: { requests: RequestItem[], arduinoRequests: any[] }) {
   const [historialTab, setHistorialTab] = useState<'servidores' | 'arduino'>('servidores')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filtroSemestre, setFiltroSemestre] = useState('')
 
   // Estadísticas generales de SERVIDORES
   const stats = useMemo(() => {
@@ -59,9 +61,210 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
       .sort((a, b) => a.semestre.localeCompare(b.semestre))
   }, [requests])
 
+  // Filtrar solicitudes por búsqueda y semestre
+  const requestsFiltrados = useMemo(() => {
+    return requests.filter(r => {
+      const matchSearch = searchTerm === '' || 
+        r.docenteResponsable.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.curso.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.estudiante?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchSemestre = filtroSemestre === '' || r.semestre === filtroSemestre
+      
+      return matchSearch && matchSemestre
+    })
+  }, [requests, searchTerm, filtroSemestre])
+
+  const arduinoRequestsFiltrados = useMemo(() => {
+    return arduinoRequests.filter(r => {
+      const matchSearch = searchTerm === '' || 
+        r.docenteResponsable?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.curso?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.kitArduino?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.temaProyecto?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchSemestre = filtroSemestre === '' || r.semestre === filtroSemestre
+      
+      return matchSearch && matchSemestre
+    })
+  }, [arduinoRequests, searchTerm, filtroSemestre])
+
+  // Semestres únicos para el filtro
+  const semestresUnicos = useMemo(() => {
+    const semestres = new Set([
+      ...requests.map(r => r.semestre),
+      ...arduinoRequests.map(r => r.semestre)
+    ])
+    return Array.from(semestres).filter(Boolean).sort().reverse()
+  }, [requests, arduinoRequests])
+
   return (
     <div>
       <h2>Reportes y Métricas</h2>
+
+      {/* Historial Completo de Solicitudes - ARRIBA */}
+      <div style={{ marginTop: 32, marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--primary)', margin: 0 }}>
+            Historial Completo de Solicitudes
+          </h3>
+        </div>
+
+        {/* Buscador y Filtros */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 12, 
+          marginBottom: 16, 
+          flexWrap: 'wrap',
+          background: 'var(--bg)',
+          padding: 16,
+          borderRadius: 8,
+          border: '1px solid var(--border)'
+        }}>
+          <input
+            type="text"
+            placeholder="Buscar por docente, curso, servidor, estudiante..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              minWidth: 250,
+              padding: '10px 14px',
+              fontSize: '0.95rem'
+            }}
+          />
+          <select
+            value={filtroSemestre}
+            onChange={(e) => setFiltroSemestre(e.target.value)}
+            style={{ 
+              padding: '10px 14px',
+              fontSize: '0.95rem',
+              minWidth: 150
+            }}
+          >
+            <option value="">Todos los semestres</option>
+            {semestresUnicos.map(sem => (
+              <option key={sem} value={sem}>{sem}</option>
+            ))}
+          </select>
+          {(searchTerm || filtroSemestre) && (
+            <button 
+              onClick={() => { setSearchTerm(''); setFiltroSemestre(''); }}
+              className="small"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <button 
+            className={historialTab === 'servidores' ? 'primary' : ''}
+            onClick={() => setHistorialTab('servidores')}
+            style={{ padding: '10px 20px' }}
+          >
+            Servidores ({requestsFiltrados.length})
+          </button>
+          <button 
+            className={historialTab === 'arduino' ? 'primary' : ''}
+            onClick={() => setHistorialTab('arduino')}
+            style={{ padding: '10px 20px' }}
+          >
+            Kits Arduino ({arduinoRequestsFiltrados.length})
+          </button>
+        </div>
+
+        {/* Tabla de Servidores */}
+        {historialTab === 'servidores' && (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Docente</th>
+                <th>Curso</th>
+                <th>Semestre</th>
+                <th>Servidor</th>
+                <th>Estudiante</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requestsFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+                    {searchTerm || filtroSemestre ? 'No se encontraron solicitudes con los filtros aplicados' : 'No hay solicitudes registradas'}
+                  </td>
+                </tr>
+              ) : (
+                requestsFiltrados.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.fecha}</td>
+                    <td>{r.docenteResponsable}</td>
+                    <td>{r.curso}</td>
+                    <td>{r.semestre}</td>
+                    <td>{r.servidor}</td>
+                    <td>{r.estudiante?.nombre || 'N/A'}</td>
+                    <td>
+                      <span className={`badge ${r.status.toLowerCase()}`}>
+                        {r.status === 'PENDIENTE' ? 'Pendiente' : r.status === 'APROBADA' ? 'Aprobada' : 'Rechazada'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tabla de Arduino */}
+        {historialTab === 'arduino' && (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Docente</th>
+                <th>Curso</th>
+                <th>Semestre</th>
+                <th>Kit Arduino</th>
+                <th>Proyecto</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {arduinoRequestsFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+                    {searchTerm || filtroSemestre ? 'No se encontraron solicitudes con los filtros aplicados' : 'No hay solicitudes registradas'}
+                  </td>
+                </tr>
+              ) : (
+                arduinoRequestsFiltrados.map((r) => (
+                  <tr key={r.id}>
+                    <td>{new Date(r.fecha).toLocaleDateString()}</td>
+                    <td>{r.docenteResponsable}</td>
+                    <td>{r.curso}</td>
+                    <td>{r.semestre}</td>
+                    <td>{r.kitArduino}</td>
+                    <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.temaProyecto}
+                    </td>
+                    <td>{r.nombreResponsable}</td>
+                    <td>
+                      <span className={`badge ${r.status?.toLowerCase()}`}>
+                        {r.status === 'PENDIENTE' ? 'Pendiente' : r.status === 'APROBADA' ? 'Aprobada' : 'Rechazada'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
       
       {/* Stats Cards - SERVIDORES */}
       <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: '1.25rem', fontWeight: 600, color: 'var(--primary)' }}>
@@ -208,125 +411,6 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           </ResponsiveContainer>
         </div>
       )}
-
-      {/* Tabla de todas las solicitudes con pestañas */}
-      <div style={{ 
-        background: 'var(--card)', 
-        padding: '24px', 
-        borderRadius: '12px', 
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow)'
-      }}>
-        <h3 style={{ marginBottom: '16px', fontSize: '1.125rem', fontWeight: 600 }}>
-          Historial Completo de Solicitudes
-        </h3>
-
-        {/* Pestañas para el historial */}
-        <div style={{ marginBottom: 20, display: 'flex', gap: 10 }}>
-          <button 
-            className={historialTab === 'servidores' ? 'primary' : ''}
-            onClick={() => setHistorialTab('servidores')}
-            style={{ padding: '10px 20px' }}
-          >
-            Servidores ({requests.length})
-          </button>
-          <button 
-            className={historialTab === 'arduino' ? 'primary' : ''}
-            onClick={() => setHistorialTab('arduino')}
-            style={{ padding: '10px 20px' }}
-          >
-            Kits Arduino ({arduinoRequests.length})
-          </button>
-        </div>
-
-        {/* Tabla de Servidores */}
-        {historialTab === 'servidores' && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Estudiante</th>
-                <th>Curso</th>
-                <th>Semestre</th>
-                <th>Servidor</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>
-                    No hay solicitudes de servidores registradas
-                  </td>
-                </tr>
-              ) : (
-                requests.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.fecha}</td>
-                    <td>{r.estudiante?.nombre || 'N/A'}</td>
-                    <td>{r.curso}</td>
-                    <td>{r.semestre}</td>
-                    <td>{r.servidor}</td>
-                    <td>
-                      <span className={`badge ${r.status.toLowerCase()}`}>
-                        {r.status === 'PENDIENTE' && 'Pendiente'}
-                        {r.status === 'APROBADA' && 'Aprobada'}
-                        {r.status === 'RECHAZADA' && 'Rechazada'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-
-        {/* Tabla de Arduino */}
-        {historialTab === 'arduino' && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Estudiante</th>
-                <th>Curso</th>
-                <th>Semestre</th>
-                <th>Kit Arduino</th>
-                <th>Proyecto</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {arduinoRequests.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>
-                    No hay solicitudes de Arduino registradas
-                  </td>
-                </tr>
-              ) : (
-                arduinoRequests.map((r) => (
-                  <tr key={r.id}>
-                    <td>{new Date(r.fecha).toLocaleDateString()}</td>
-                    <td>{r.estudiante?.nombre || 'N/A'}</td>
-                    <td>{r.curso}</td>
-                    <td>{r.semestre}</td>
-                    <td>{r.kitArduino}</td>
-                    <td style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {r.temaProyecto}
-                    </td>
-                    <td>
-                      <span className={`badge ${r.status.toLowerCase()}`}>
-                        {r.status === 'PENDIENTE' && 'Pendiente'}
-                        {r.status === 'APROBADA' && 'Aprobada'}
-                        {r.status === 'RECHAZADA' && 'Rechazada'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   )
 }
