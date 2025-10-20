@@ -64,12 +64,15 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
     return { total, pendientes, aprobadas, rechazadas }
   }, [arduinoRequestsFiltrados])
 
-  // Datos para gráfico de torta - Estados (usando datos filtrados)
-  const pieData = useMemo(() => [
-    { name: 'Pendientes', value: stats.pendientes, color: COLORS.PENDIENTE },
-    { name: 'Aprobadas', value: stats.aprobadas, color: COLORS.APROBADA },
-    { name: 'Rechazadas', value: stats.rechazadas, color: COLORS.RECHAZADA }
-  ].filter(item => item.value > 0), [stats])
+  // Datos para gráfico de torta - Estados (dinámico según pestaña)
+  const pieData = useMemo(() => {
+    const statsActual = historialTab === 'servidores' ? stats : statsArduino
+    return [
+      { name: 'Pendientes', value: statsActual.pendientes, color: COLORS.PENDIENTE },
+      { name: 'Aprobadas', value: statsActual.aprobadas, color: COLORS.APROBADA },
+      { name: 'Rechazadas', value: statsActual.rechazadas, color: COLORS.RECHAZADA }
+    ].filter(item => item.value > 0)
+  }, [stats, statsArduino, historialTab])
 
   // Servidores más solicitados (usando datos filtrados)
   const servidoresMasSolicitados = useMemo(() => {
@@ -83,16 +86,29 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
       .slice(0, 5)
   }, [requestsFiltrados])
 
-  // Solicitudes por semestre (usando datos filtrados)
+  // Kits Arduino más solicitados (usando datos filtrados)
+  const kitsMasSolicitados = useMemo(() => {
+    const counts: Record<string, number> = {}
+    arduinoRequestsFiltrados.forEach(r => {
+      counts[r.kitArduino] = (counts[r.kitArduino] || 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([kit, cantidad]) => ({ kit, cantidad }))
+      .sort((a, b) => b.cantidad - a.cantidad)
+      .slice(0, 5)
+  }, [arduinoRequestsFiltrados])
+
+  // Solicitudes por semestre (dinámico según pestaña)
   const porSemestre = useMemo(() => {
     const counts: Record<string, number> = {}
-    requestsFiltrados.forEach(r => {
+    const datosActuales = historialTab === 'servidores' ? requestsFiltrados : arduinoRequestsFiltrados
+    datosActuales.forEach(r => {
       counts[r.semestre] = (counts[r.semestre] || 0) + 1
     })
     return Object.entries(counts)
       .map(([semestre, cantidad]) => ({ semestre, cantidad }))
       .sort((a, b) => a.semestre.localeCompare(b.semestre))
-  }, [requestsFiltrados])
+  }, [requestsFiltrados, arduinoRequestsFiltrados, historialTab])
 
   // Semestres únicos para el filtro
   const semestresUnicos = useMemo(() => {
@@ -416,7 +432,10 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry: any) => `${entry.name}: ${((entry.value / stats.total) * 100).toFixed(0)}%`}
+                  label={(entry: any) => {
+                    const totalActual = historialTab === 'servidores' ? stats.total : statsArduino.total
+                    return `${entry.name}: ${((entry.value / totalActual) * 100).toFixed(0)}%`
+                  }}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -435,7 +454,7 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           )}
         </div>
 
-        {/* Gráfico de Barras - Servidores más solicitados */}
+        {/* Gráfico de Barras - Servidores o Kits más solicitados */}
         <div style={{ 
           background: 'var(--card)', 
           padding: '24px', 
@@ -444,13 +463,14 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           boxShadow: 'var(--shadow)'
         }}>
           <h3 style={{ marginBottom: '16px', fontSize: '1.125rem', fontWeight: 600 }}>
-            Servidores Más Solicitados
+            {historialTab === 'servidores' ? 'Servidores Más Solicitados' : 'Kits Arduino Más Solicitados'}
           </h3>
-          {servidoresMasSolicitados.length > 0 ? (
+          {((historialTab === 'servidores' && servidoresMasSolicitados.length > 0) || 
+            (historialTab === 'arduino' && kitsMasSolicitados.length > 0)) ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={servidoresMasSolicitados}>
+              <BarChart data={historialTab === 'servidores' ? servidoresMasSolicitados : kitsMasSolicitados}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="servidor" tick={{ fontSize: 12 }} />
+                <XAxis dataKey={historialTab === 'servidores' ? 'servidor' : 'kit'} tick={{ fontSize: 12 }} />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="cantidad" fill="var(--accent)" radius={[8, 8, 0, 0]} />
