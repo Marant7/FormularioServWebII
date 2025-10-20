@@ -416,67 +416,67 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
           <ComponenteCheckbox
             nombre="microcontroladorWifi"
-            label="Microcontrolador / Módulo WIFI"
+            label="Módulo WiFi ESP8266 - Conectividad inalámbrica"
             componente="microcontroladorWifi"
           />
           <ComponenteCheckbox
             nombre="microcontroladorPlaca"
-            label="Microcontrolador / Placa de desarrollo"
+            label="Arduino Uno R3 - Placa principal de desarrollo"
             componente="microcontroladorPlaca"
           />
           <ComponenteCheckbox
             nombre="prototipado"
-            label="Prototipado / Conexión"
+            label="Protoboard 830 puntos - Para montaje sin soldadura"
             componente="prototipado"
           />
           <ComponenteCheckbox
             nombre="sensorComunicacion"
-            label="Sensor / Comunicación"
+            label="Módulo Bluetooth HC-05 - Comunicación serial"
             componente="sensorComunicacion"
           />
           <ComponenteCheckbox
             nombre="alimentacion"
-            label="Alimentación / Energía"
+            label="Fuente 9V con adaptador - Alimentación externa"
             componente="alimentacion"
           />
           <ComponenteCheckbox
             nombre="sensorEntradaUsuario"
-            label="Sensor / Entrada de usuario"
+            label="Botones pulsadores - Entradas digitales"
             componente="sensorEntradaUsuario"
           />
           <ComponenteCheckbox
             nombre="sensorTemperatura"
-            label="Sensor / Temperatura"
+            label="Sensor DHT11 - Temperatura y humedad"
             componente="sensorTemperatura"
           />
           <ComponenteCheckbox
             nombre="sensorInterruptor"
-            label="Sensor / Interruptor"
+            label="Sensor Reed magnético - Detección ON/OFF"
             componente="sensorInterruptor"
           />
           <ComponenteCheckbox
             nombre="sensorLuz"
-            label="Sensor / Luz"
+            label="Fotoresistencia LDR - Sensor de luz ambiental"
             componente="sensorLuz"
           />
           <ComponenteCheckbox
             nombre="sensorAjusteAnalogico"
-            label="Sensor / Ajuste Analógico"
+            label="Potenciómetro 10k - Entrada analógica variable"
             componente="sensorAjusteAnalogico"
           />
           <ComponenteCheckbox
             nombre="controladorLED"
-            label="Circuito Integrado / Controlador LED"
+            label="LEDs RGB y driver - Control de iluminación"
             componente="controladorLED"
           />
           <ComponenteCheckbox
             nombre="registroDesplazamiento"
-            label="Circuito Integrado / Registro de desplazamiento"
+            label="74HC595 - Expansión de salidas digitales"
             componente="registroDesplazamiento"
           />
           <ComponenteCheckbox
             nombre="resistencia"
-            label="Componente Pasivo / Resistencia"
+            label="Set de resistencias - 220Ω, 1kΩ, 10kΩ"
             componente="resistencia"
           />
         </div>
@@ -537,16 +537,18 @@ export default function ArduinoKitForm({ onCreate }: { onCreate: (data: any) => 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 12px',
+                padding: '12px 16px',
                 background: 'var(--bg)',
                 borderRadius: '6px',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
+                gap: '16px'
               }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{integrante}</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text)', flex: 1 }}>{integrante}</span>
                 <button
                   type="button"
                   onClick={() => eliminarIntegrante(i)}
                   className="small danger"
+                  style={{ whiteSpace: 'nowrap', minWidth: '80px' }}
                 >
                   Eliminar
                 </button>

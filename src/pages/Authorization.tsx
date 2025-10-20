@@ -21,7 +21,12 @@ export default function Authorization({
   const [open, setOpen] = useState(false)
   const [modalType, setModalType] = useState<'servidor' | 'arduino'>('servidor')
   const [tab, setTab] = useState<'servidores' | 'arduino'>('servidores')
+  const [vistaTab, setVistaTab] = useState<'pendientes' | 'historial'>('pendientes')
   const [userName, setUserName] = useState<string>('')
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [rejectId, setRejectId] = useState<string>('')
+  const [rejectType, setRejectType] = useState<'servidor' | 'arduino'>('servidor')
+  const [razonRechazo, setRazonRechazo] = useState('')
 
   // Obtener nombre del usuario actual
   React.useEffect(() => {
@@ -49,34 +54,41 @@ export default function Authorization({
   }
 
   function handleApprove(id: string, type: 'servidor' | 'arduino') {
-    const razon = prompt(`Autorizado por: ${userName}\n\n¿Desea agregar alguna observación? (opcional)`)
-    if (razon !== null) { // null significa que canceló
-      if (type === 'servidor') {
-        onApprove(id)
-      } else {
-        onApproveArduino(id)
-      }
+    if (type === 'servidor') {
+      onApprove(id)
+    } else {
+      onApproveArduino(id)
     }
   }
 
   function handleReject(id: string, type: 'servidor' | 'arduino') {
-    const razon = prompt(`Rechazado por: ${userName}\n\nIndique el motivo del rechazo:`)
-    if (razon && razon.trim()) {
-      if (type === 'servidor') {
-        onReject(id)
-      } else {
-        onRejectArduino(id)
-      }
-    } else if (razon !== null) {
+    setRejectId(id)
+    setRejectType(type)
+    setRazonRechazo('')
+    setRejectModalOpen(true)
+  }
+
+  function confirmarRechazo() {
+    if (!razonRechazo.trim()) {
       alert('Debe indicar un motivo para rechazar la solicitud')
+      return
     }
+    
+    if (rejectType === 'servidor') {
+      onReject(rejectId)
+    } else {
+      onRejectArduino(rejectId)
+    }
+    
+    setRejectModalOpen(false)
+    setRazonRechazo('')
   }
 
   return (
     <div>
       <h2>Autorización de Solicitudes</h2>
       
-      {/* Pestañas */}
+      {/* Pestañas de tipo */}
       <div style={{ marginBottom: 20, display: 'flex', gap: 10 }}>
         <button 
           className={tab === 'servidores' ? 'primary' : ''}
@@ -91,6 +103,24 @@ export default function Authorization({
           style={{ padding: '10px 20px' }}
         >
           Kits Arduino ({pendientesArduino} pendientes)
+        </button>
+      </div>
+
+      {/* Sub-pestañas: Pendientes vs Historial */}
+      <div style={{ marginBottom: 15, display: 'flex', gap: 10, borderBottom: '2px solid var(--border)', paddingBottom: 10 }}>
+        <button 
+          className={vistaTab === 'pendientes' ? 'primary' : ''}
+          onClick={() => setVistaTab('pendientes')}
+          style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+        >
+          Pendientes ({tab === 'servidores' ? pendientesServ : pendientesArduino})
+        </button>
+        <button 
+          className={vistaTab === 'historial' ? 'primary' : ''}
+          onClick={() => setVistaTab('historial')}
+          style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+        >
+          Historial Completo ({tab === 'servidores' ? totalServ : totalArduino})
         </button>
       </div>
 
@@ -130,14 +160,14 @@ export default function Authorization({
             </tr>
           </thead>
           <tbody>
-            {requests.length === 0 ? (
+            {requests.filter(r => vistaTab === 'pendientes' ? r.status === 'PENDIENTE' : true).length === 0 ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-                  No hay solicitudes de servidores para mostrar
+                  {vistaTab === 'pendientes' ? 'No hay solicitudes pendientes' : 'No hay solicitudes de servidores para mostrar'}
                 </td>
               </tr>
             ) : (
-              requests.map((r) => (
+              requests.filter(r => vistaTab === 'pendientes' ? r.status === 'PENDIENTE' : true).map((r) => (
                 <tr key={r.id}>
                   <td style={{ fontSize: '0.85em', color: '#666' }}>{r.id.slice(0, 8)}...</td>
                   <td>{r.docenteResponsable}</td>
@@ -199,14 +229,14 @@ export default function Authorization({
             </tr>
           </thead>
           <tbody>
-            {arduinoRequests.length === 0 ? (
+            {arduinoRequests.filter(r => vistaTab === 'pendientes' ? r.status === 'PENDIENTE' : true).length === 0 ? (
               <tr>
                 <td colSpan={10} style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-                  No hay solicitudes de Arduino para mostrar
+                  {vistaTab === 'pendientes' ? 'No hay solicitudes pendientes' : 'No hay solicitudes de Arduino para mostrar'}
                 </td>
               </tr>
             ) : (
-              arduinoRequests.map((r) => (
+              arduinoRequests.filter(r => vistaTab === 'pendientes' ? r.status === 'PENDIENTE' : true).map((r) => (
                 <tr key={r.id}>
                   <td style={{ fontSize: '0.85em', color: '#666' }}>{r.id.slice(0, 8)}...</td>
                   <td>{r.docenteResponsable}</td>
@@ -254,6 +284,96 @@ export default function Authorization({
       )}
 
       <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} type={modalType} />
+
+      {/* Modal de Rechazo */}
+      {rejectModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div style={{
+            background: 'var(--card-bg)',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--text)' }}>
+              Rechazar Solicitud
+            </h3>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+              Rechazado por: <strong>{userName}</strong>
+            </p>
+            
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              fontWeight: 600,
+              color: 'var(--text)'
+            }}>
+              Motivo del rechazo: <span style={{ color: '#dc3545' }}>*</span>
+            </label>
+            <textarea
+              value={razonRechazo}
+              onChange={(e) => setRazonRechazo(e.target.value)}
+              placeholder="Indique el motivo por el cual se rechaza la solicitud..."
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border)',
+                fontSize: '0.95rem',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+            />
+            
+            <div style={{ 
+              marginTop: '24px', 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button 
+                onClick={() => {
+                  setRejectModalOpen(false)
+                  setRazonRechazo('')
+                }}
+                style={{ 
+                  padding: '10px 24px',
+                  background: 'var(--border)',
+                  color: 'var(--text)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmarRechazo}
+                className="danger"
+                style={{ 
+                  padding: '10px 24px',
+                  borderRadius: '6px'
+                }}
+              >
+                Confirmar Rechazo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

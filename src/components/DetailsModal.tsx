@@ -180,6 +180,74 @@ export default function DetailsModal({ open, onClose, request, type = 'servidor'
                 </div>
               </div>
 
+              {/* Componentes Incluidos - Solo para Arduino */}
+              {request.componentesIncluidos && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ 
+                    fontSize: '1rem', 
+                    fontWeight: 600, 
+                    marginBottom: '12px', 
+                    color: 'var(--text)',
+                    borderBottom: '2px solid var(--border)',
+                    paddingBottom: '8px'
+                  }}>
+                    Componentes Seleccionados
+                  </h4>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                    gap: '8px' 
+                  }}>
+                    {Object.entries(request.componentesIncluidos).map(([key, value]: [string, any]) => {
+                      if (value.incluido) {
+                        const nombres: Record<string, string> = {
+                          microcontroladorWifi: 'Módulo WiFi ESP8266',
+                          microcontroladorPlaca: 'Arduino Uno R3',
+                          prototipado: 'Protoboard 830 puntos',
+                          sensorComunicacion: 'Módulo Bluetooth HC-05',
+                          alimentacion: 'Fuente 9V',
+                          sensorEntradaUsuario: 'Botones pulsadores',
+                          sensorTemperatura: 'Sensor DHT11',
+                          sensorInterruptor: 'Sensor Reed',
+                          sensorLuz: 'Fotoresistencia LDR',
+                          sensorAjusteAnalogico: 'Potenciómetro 10k',
+                          controladorLED: 'LEDs RGB',
+                          registroDesplazamiento: '74HC595',
+                          resistencia: 'Set de resistencias'
+                        }
+                        return (
+                          <div key={key} style={{ 
+                            padding: '10px 12px',
+                            background: '#f0fdf4',
+                            border: '1px solid #86efac',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '0.875rem'
+                          }}>
+                            <span style={{ color: '#065f46', fontWeight: 500 }}>
+                              ✓ {nombres[key] || key}
+                            </span>
+                            <span style={{ 
+                              background: '#dcfce7', 
+                              padding: '2px 8px', 
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: '#166534'
+                            }}>
+                              x{value.cantidad}
+                            </span>
+                          </div>
+                        )
+                      }
+                      return null
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Responsable */}
               <div style={{ marginBottom: '24px' }}>
                 <h4 style={{ 
