@@ -1,11 +1,40 @@
+# Dependencies
 node_modules/
+server/node_modules/
+
+# Build outputs
 dist/
-/.cache
-/.DS_Store
-npm-debug.log*
+server/dist/
+
+# Environment variables
 .env
-/.idea
-/.vscode
+.env.local
+.env.production
+server/.env
+server/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Optional
 package-lock.json
-/*.log
 docs/
+
+# Prisma
+server/prisma/migrations/*.sql

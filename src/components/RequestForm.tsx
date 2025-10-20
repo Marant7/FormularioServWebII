@@ -100,9 +100,51 @@ export default function RequestForm({ onCreate }: { onCreate?: (data: any) => vo
     if (!form.docenteResponsable.trim()) e.push('Docente Responsable es requerido')
     if (!form.curso.trim()) e.push('Curso es requerido')
     if (!form.fecha) e.push('Fecha es requerida')
+    
+    // Validar que la fecha no sea pasada
+    if (form.fecha) {
+      const fechaSeleccionada = new Date(form.fecha)
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      
+      if (fechaSeleccionada < hoy) {
+        e.push('La fecha no puede ser anterior a hoy')
+      }
+      
+      // Validar que no sea mayor a 6 meses
+      const seisMesesAdelante = new Date()
+      seisMesesAdelante.setMonth(seisMesesAdelante.getMonth() + 6)
+      
+      if (fechaSeleccionada > seisMesesAdelante) {
+        e.push('La fecha no puede ser mayor a 6 meses en adelante')
+      }
+    }
+    
     if (!form.horaEntrada) e.push('Hora de entrada es requerida')
     if (!form.horaSalida) e.push('Hora de salida es requerida')
-    if (form.horaEntrada && form.horaSalida && form.horaEntrada >= form.horaSalida) e.push('La hora de entrada debe ser menor que la hora de salida')
+    
+    // Validar horas si es hoy
+    if (form.fecha && form.horaEntrada) {
+      const fechaSeleccionada = new Date(form.fecha)
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      
+      if (fechaSeleccionada.getTime() === hoy.getTime()) {
+        const ahora = new Date()
+        const [horaEntrada, minEntrada] = form.horaEntrada.split(':').map(Number)
+        const horaEntradaDate = new Date()
+        horaEntradaDate.setHours(horaEntrada, minEntrada, 0, 0)
+        
+        if (horaEntradaDate < ahora) {
+          e.push('La hora de entrada no puede ser anterior a la hora actual')
+        }
+      }
+    }
+    
+    if (form.horaEntrada && form.horaSalida && form.horaEntrada >= form.horaSalida) {
+      e.push('La hora de entrada debe ser menor que la hora de salida')
+    }
+    
     return e
   }
 
@@ -141,7 +183,13 @@ export default function RequestForm({ onCreate }: { onCreate?: (data: any) => vo
         </select>
 
         <label>Fecha:</label>
-        <input type="date" value={form.fecha} onChange={(e) => handleChange('fecha', e.target.value)} />
+        <input 
+          type="date" 
+          value={form.fecha} 
+          onChange={(e) => handleChange('fecha', e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
+          max={new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0]}
+        />
       </div>
 
       <div className="row">

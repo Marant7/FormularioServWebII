@@ -1,0 +1,157 @@
+### Verificar que la API funciona
+GET http://localhost:3000/
+
+###
+
+### ========================================
+### AUTENTICACIÓN
+### ========================================
+
+### 1. Registrar nuevo usuario
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "nuevo@upt.pe",
+  "password": "123456",
+  "nombre": "Nuevo Usuario",
+  "role": "ESTUDIANTE"
+}
+
+###
+
+### 2. Login como ESTUDIANTE
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "estudiante@upt.pe",
+  "password": "estudiante123"
+}
+
+###
+
+### 3. Login como SOPORTE
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "soporte@upt.pe",
+  "password": "soporte123"
+}
+
+###
+
+### 4. Login como METRICAS (Jefe)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jefe@upt.pe",
+  "password": "metricas123"
+}
+
+###
+
+### 5. Obtener usuario actual (requiere token)
+# Primero haz login y copia el token
+# Luego reemplaza YOUR_TOKEN_HERE con el token real
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###
+
+### ========================================
+### SOLICITUDES (Requieren autenticación)
+### ========================================
+
+### 6. Listar todas las solicitudes
+GET http://localhost:3000/api/requests
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###
+
+### 7. Crear nueva solicitud (solo ESTUDIANTE)
+POST http://localhost:3000/api/requests
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+Content-Type: application/json
+
+{
+  "docenteResponsable": "Dr. García López",
+  "curso": "Redes I",
+  "semestre": "2025-II",
+  "fecha": "2025-10-25",
+  "horaEntrada": "08:00",
+  "horaSalida": "12:00",
+  "servidor": "Server1",
+  "serieServidor": "ABC123",
+  "tipoServidor": "Torre",
+  "caracteristicas": "8CPU, 16GB RAM",
+  "incluirMonitor": true,
+  "incluirTeclado": true,
+  "incluirMouse": false,
+  "codigoResponsable": "2020001",
+  "nombreResponsable": "Juan Pérez",
+  "integrantes": [
+    {
+      "codigo": "2020002",
+      "nombre": "María López",
+      "rol": "Estudiante"
+    }
+  ],
+  "soporte": "Teli Casilla Maquera"
+}
+
+###
+
+### 8. Ver solicitud específica (reemplaza REQUEST_ID)
+GET http://localhost:3000/api/requests/REQUEST_ID
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###
+
+### 9. Aprobar solicitud (solo SOPORTE, reemplaza REQUEST_ID)
+PUT http://localhost:3000/api/requests/REQUEST_ID/authorize
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+Content-Type: application/json
+
+{
+  "accion": "APROBADA",
+  "razon": "Solicitud completa y válida"
+}
+
+###
+
+### 10. Rechazar solicitud (solo SOPORTE, reemplaza REQUEST_ID)
+PUT http://localhost:3000/api/requests/REQUEST_ID/authorize
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+Content-Type: application/json
+
+{
+  "accion": "RECHAZADA",
+  "razon": "Falta información del responsable"
+}
+
+###
+
+### 11. Eliminar solicitud (solo ESTUDIANTE, reemplaza REQUEST_ID)
+DELETE http://localhost:3000/api/requests/REQUEST_ID
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###
+
+### ========================================
+### REPORTES (Solo SOPORTE y METRICAS)
+### ========================================
+
+### 12. Obtener estadísticas
+GET http://localhost:3000/api/reports/stats
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###
+
+### 13. Obtener timeline (últimos 30 días)
+GET http://localhost:3000/api/reports/timeline
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWd5cTFhdmMwMDAwOXR5MTYyZXRpdmFvIiwicm9sZSI6IkVTVFVESUFOVEUiLCJpYXQiOjE3NjA5Mzk4NjksImV4cCI6MTc2MTAyNjI2OX0.46MkK5aY-fU7e2uvc4e42y3tjjvlfN4rJPLnNokjbtI
+
+###

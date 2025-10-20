@@ -1,0 +1,130 @@
+// Prisma Schema - Define tu base de datos aquí
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuario con 3 roles
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hash de la contraseña
+  nombre    String
+  role      Role     @default(ESTUDIANTE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  solicitudesCreadas        Request[]       @relation("EstudianteRequests")
+  solicitudesArduinoCreadas ArduinoRequest[] @relation("EstudianteArduinoRequests")
+  autorizaciones            Authorization[]
+  autorizacionesArduino     ArduinoAuthorization[]
+}
+
+// Enum de Roles
+enum Role {
+  ESTUDIANTE  // Envía solicitudes
+  SOPORTE     // Acepta/rechaza solicitudes
+  METRICAS    // Solo ve reportes
+}
+
+// Modelo de Solicitud (Request)
+model Request {
+  id                   String        @id @default(cuid())
+  docenteResponsable   String
+  curso                String
+  semestre             String
+  fecha                DateTime
+  horaEntrada          String
+  horaSalida           String
+  servidor             String
+  serieServidor        String
+  tipoServidor         String
+  caracteristicas      String
+  incluirMonitor       Boolean       @default(false)
+  incluirTeclado       Boolean       @default(false)
+  incluirMouse         Boolean       @default(false)
+  codigoResponsable    String
+  nombreResponsable    String
+  integrantes          Json          // Array de {codigo, nombre, rol}
+  soporte              String
+  status               RequestStatus @default(PENDIENTE)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relaciones
+  estudianteId String
+  estudiante   User            @relation("EstudianteRequests", fields: [estudianteId], references: [id])
+  
+  autorizacion Authorization?
+}
+
+// Enum de Estados
+enum RequestStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+// Modelo de Autorización (cuando soporte acepta/rechaza)
+model Authorization {
+  id        String   @id @default(cuid())
+  requestId String   @unique
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  soporteId String
+  soporte   User     @relation(fields: [soporteId], references: [id])
+  
+  accion    String   // "APROBADA" o "RECHAZADA"
+  razon     String?  // Razón por la cual se rechazó o aprobó
+  
+  createdAt DateTime @default(now())
+}
+
+// Modelo de Solicitud de Kit Arduino
+model ArduinoRequest {
+  id                   String        @id @default(cuid())
+  docenteResponsable   String
+  curso                String
+  semestre             String
+  temaProyecto         String
+  fecha                DateTime
+  horaEntrada          String
+  horaSalida           String
+  kitArduino           String
+  estadoKit            String        // "completo" o "especifico"
+  componentesIncluidos Json          // Objeto con todos los componentes y cantidades
+  codigoResponsable    String
+  nombreResponsable    String
+  integrantes          Json          // Array de nombres
+  soporte              String
+  status               RequestStatus @default(PENDIENTE)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relaciones
+  estudianteId String
+  estudiante   User                   @relation("EstudianteArduinoRequests", fields: [estudianteId], references: [id])
+  
+  autorizacion ArduinoAuthorization?
+}
+
+// Modelo de Autorización para Arduino
+model ArduinoAuthorization {
+  id        String         @id @default(cuid())
+  requestId String         @unique
+  request   ArduinoRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  soporteId String
+  soporte   User           @relation(fields: [soporteId], references: [id])
+  
+  accion    String         // "APROBADA" o "RECHAZADA"
+  razon     String?        // Razón por la cual se rechazó o aprobó
+  
+  createdAt DateTime       @default(now())
+}
