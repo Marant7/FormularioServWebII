@@ -14,10 +14,15 @@ export const API_ENDPOINTS = {
   login: `${API_URL}/api/auth/login`,
   me: `${API_URL}/api/auth/me`,
   
-  // Requests
+  // Requests (Servidores)
   requests: `${API_URL}/api/requests`,
   requestById: (id: string) => `${API_URL}/api/requests/${id}`,
   authorizeRequest: (id: string) => `${API_URL}/api/requests/${id}/authorize`,
+  
+  // Arduino Requests
+  arduinoRequests: `${API_URL}/api/arduino-requests`,
+  arduinoRequestById: (id: string) => `${API_URL}/api/arduino-requests/${id}`,
+  authorizeArduinoRequest: (id: string) => `${API_URL}/api/arduino-requests/${id}/authorize`,
   
   // Reports
   stats: `${API_URL}/api/reports/stats`,

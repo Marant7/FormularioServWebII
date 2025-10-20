@@ -105,12 +105,12 @@ export const deleteRequest = async (id: string): Promise<void> => {
 // ========================================
 
 export const getArduinoRequests = async (): Promise<any[]> => {
-  const result = await authFetch('http://localhost:3000/api/arduino-requests');
+  const result = await authFetch(API_ENDPOINTS.arduinoRequests);
   return result;
 };
 
 export const createArduinoRequest = async (data: any): Promise<any> => {
-  const result = await authFetch('http://localhost:3000/api/arduino-requests', {
+  const result = await authFetch(API_ENDPOINTS.arduinoRequests, {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -122,7 +122,7 @@ export const authorizeArduinoRequest = async (
   accion: 'APROBADA' | 'RECHAZADA',
   razon?: string
 ): Promise<any> => {
-  const result = await authFetch(`http://localhost:3000/api/arduino-requests/${id}/authorize`, {
+  const result = await authFetch(API_ENDPOINTS.authorizeArduinoRequest(id), {
     method: 'PUT',
     body: JSON.stringify({ accion, razon }),
   });
