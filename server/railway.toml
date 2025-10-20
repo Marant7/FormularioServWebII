@@ -1,5 +1,6 @@
 [build]
 builder = "NIXPACKS"
+watchPatterns = ["server/**"]
 
 [deploy]
 startCommand = "npx prisma db push --accept-data-loss && npm run start"
