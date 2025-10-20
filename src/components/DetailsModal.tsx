@@ -9,7 +9,12 @@ interface DetailsModalProps {
 }
 
 export default function DetailsModal({ open, onClose, request, type = 'servidor' }: DetailsModalProps) {
-  if (!open || !request) return null
+  console.log('DetailsModal - open:', open, 'request:', request, 'type:', type)
+  
+  if (!open || !request) {
+    console.log('Modal not opening - open:', open, 'request:', request)
+    return null
+  }
 
   const isArduino = type === 'arduino' || request.kitArduino
 

@@ -23,6 +23,14 @@ export default function Authorization({
   const [tab, setTab] = useState<'servidores' | 'arduino'>('servidores')
   const [vistaTab, setVistaTab] = useState<'pendientes' | 'historial'>('pendientes')
   const [userName, setUserName] = useState<string>('')
+  
+  // Estados para modal de aprobación
+  const [approveModalOpen, setApproveModalOpen] = useState(false)
+  const [approveId, setApproveId] = useState<string>('')
+  const [approveType, setApproveType] = useState<'servidor' | 'arduino'>('servidor')
+  const [razonAprobacion, setRazonAprobacion] = useState('')
+  
+  // Estados para modal de rechazo
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectId, setRejectId] = useState<string>('')
   const [rejectType, setRejectType] = useState<'servidor' | 'arduino'>('servidor')
@@ -54,11 +62,21 @@ export default function Authorization({
   }
 
   function handleApprove(id: string, type: 'servidor' | 'arduino') {
-    if (type === 'servidor') {
-      onApprove(id)
+    setApproveId(id)
+    setApproveType(type)
+    setRazonAprobacion('')
+    setApproveModalOpen(true)
+  }
+
+  function confirmarAprobacion() {
+    if (approveType === 'servidor') {
+      onApprove(approveId, razonAprobacion || undefined)
     } else {
-      onApproveArduino(id)
+      onApproveArduino(approveId, razonAprobacion || undefined)
     }
+    
+    setApproveModalOpen(false)
+    setRazonAprobacion('')
   }
 
   function handleReject(id: string, type: 'servidor' | 'arduino') {
@@ -284,6 +302,96 @@ export default function Authorization({
       )}
 
       <DetailsModal open={open} onClose={() => setOpen(false)} request={selected} type={modalType} />
+
+      {/* Modal de Aprobación */}
+      {approveModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div style={{
+            background: 'var(--card)',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--text)' }}>
+              Aprobar Solicitud
+            </h3>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+              Aprobado por: <strong>{userName}</strong>
+            </p>
+            
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              fontWeight: 600,
+              color: 'var(--text)'
+            }}>
+              Observación (opcional):
+            </label>
+            <textarea
+              value={razonAprobacion}
+              onChange={(e) => setRazonAprobacion(e.target.value)}
+              placeholder="Puede agregar alguna observación o nota (opcional)..."
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border)',
+                fontSize: '0.95rem',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+            />
+            
+            <div style={{ 
+              marginTop: '24px', 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button 
+                onClick={() => {
+                  setApproveModalOpen(false)
+                  setRazonAprobacion('')
+                }}
+                style={{ 
+                  padding: '10px 24px',
+                  background: 'var(--border)',
+                  color: 'var(--text)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmarAprobacion}
+                className="primary"
+                style={{ 
+                  padding: '10px 24px',
+                  borderRadius: '6px'
+                }}
+              >
+                Confirmar Aprobación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Rechazo */}
       {rejectModalOpen && (
