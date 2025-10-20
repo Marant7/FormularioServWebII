@@ -300,7 +300,7 @@ export default function Authorization({
           zIndex: 10000
         }}>
           <div style={{
-            background: 'var(--card-bg)',
+            background: 'var(--card)',
             borderRadius: '12px',
             padding: '32px',
             maxWidth: '500px',
