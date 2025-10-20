@@ -9,6 +9,10 @@ const prisma = new PrismaClient();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
+    if (!user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
     let solicitudes;
 
     if (user.role === 'ESTUDIANTE') {
@@ -76,6 +80,10 @@ router.get('/', authenticateToken, async (req, res) => {
 // POST - Crear nueva solicitud de Arduino (solo estudiantes)
 router.post('/', authenticateToken, authorizeRoles('ESTUDIANTE'), async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
     const {
       docenteResponsable,
       curso,
@@ -129,6 +137,10 @@ router.post('/', authenticateToken, authorizeRoles('ESTUDIANTE'), async (req, re
 // PUT - Autorizar/Rechazar solicitud (solo soporte)
 router.put('/:id/authorize', authenticateToken, authorizeRoles('SOPORTE'), async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
     const { id } = req.params;
     const { accion, razon } = req.body;
 
@@ -174,6 +186,10 @@ router.put('/:id/authorize', authenticateToken, authorizeRoles('SOPORTE'), async
 // DELETE - Eliminar solicitud
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
     const { id } = req.params;
     const user = req.user;
 
