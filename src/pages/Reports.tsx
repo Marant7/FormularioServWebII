@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef } from 'react'
 import { RequestItem } from '../App'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 const COLORS = {
   PENDIENTE: '#f59e0b',
@@ -12,56 +14,10 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
   const [historialTab, setHistorialTab] = useState<'servidores' | 'arduino'>('servidores')
   const [searchTerm, setSearchTerm] = useState('')
   const [filtroSemestre, setFiltroSemestre] = useState('')
+  const [exportando, setExportando] = useState(false)
+  const reportRef = useRef<HTMLDivElement>(null)
 
-  // Estadísticas generales de SERVIDORES
-  const stats = useMemo(() => {
-    const total = requests.length
-    const pendientes = requests.filter((r) => r.status === 'PENDIENTE').length
-    const aprobadas = requests.filter((r) => r.status === 'APROBADA').length
-    const rechazadas = requests.filter((r) => r.status === 'RECHAZADA').length
-    return { total, pendientes, aprobadas, rechazadas }
-  }, [requests])
-
-  // Estadísticas generales de ARDUINO
-  const statsArduino = useMemo(() => {
-    const total = arduinoRequests.length
-    const pendientes = arduinoRequests.filter((r) => r.status === 'PENDIENTE').length
-    const aprobadas = arduinoRequests.filter((r) => r.status === 'APROBADA').length
-    const rechazadas = arduinoRequests.filter((r) => r.status === 'RECHAZADA').length
-    return { total, pendientes, aprobadas, rechazadas }
-  }, [arduinoRequests])
-
-  // Datos para gráfico de torta - Estados
-  const pieData = useMemo(() => [
-    { name: 'Pendientes', value: stats.pendientes, color: COLORS.PENDIENTE },
-    { name: 'Aprobadas', value: stats.aprobadas, color: COLORS.APROBADA },
-    { name: 'Rechazadas', value: stats.rechazadas, color: COLORS.RECHAZADA }
-  ].filter(item => item.value > 0), [stats])
-
-  // Servidores más solicitados
-  const servidoresMasSolicitados = useMemo(() => {
-    const counts: Record<string, number> = {}
-    requests.forEach(r => {
-      counts[r.servidor] = (counts[r.servidor] || 0) + 1
-    })
-    return Object.entries(counts)
-      .map(([servidor, cantidad]) => ({ servidor, cantidad }))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 5)
-  }, [requests])
-
-  // Solicitudes por semestre
-  const porSemestre = useMemo(() => {
-    const counts: Record<string, number> = {}
-    requests.forEach(r => {
-      counts[r.semestre] = (counts[r.semestre] || 0) + 1
-    })
-    return Object.entries(counts)
-      .map(([semestre, cantidad]) => ({ semestre, cantidad }))
-      .sort((a, b) => a.semestre.localeCompare(b.semestre))
-  }, [requests])
-
-  // Filtrar solicitudes por búsqueda y semestre
+  // Filtrar solicitudes por búsqueda y semestre PRIMERO
   const requestsFiltrados = useMemo(() => {
     return requests.filter(r => {
       const matchSearch = searchTerm === '' || 
@@ -90,6 +46,54 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
     })
   }, [arduinoRequests, searchTerm, filtroSemestre])
 
+  // Estadísticas generales de SERVIDORES (usando datos filtrados)
+  const stats = useMemo(() => {
+    const total = requestsFiltrados.length
+    const pendientes = requestsFiltrados.filter((r) => r.status === 'PENDIENTE').length
+    const aprobadas = requestsFiltrados.filter((r) => r.status === 'APROBADA').length
+    const rechazadas = requestsFiltrados.filter((r) => r.status === 'RECHAZADA').length
+    return { total, pendientes, aprobadas, rechazadas }
+  }, [requestsFiltrados])
+
+  // Estadísticas generales de ARDUINO (usando datos filtrados)
+  const statsArduino = useMemo(() => {
+    const total = arduinoRequestsFiltrados.length
+    const pendientes = arduinoRequestsFiltrados.filter((r) => r.status === 'PENDIENTE').length
+    const aprobadas = arduinoRequestsFiltrados.filter((r) => r.status === 'APROBADA').length
+    const rechazadas = arduinoRequestsFiltrados.filter((r) => r.status === 'RECHAZADA').length
+    return { total, pendientes, aprobadas, rechazadas }
+  }, [arduinoRequestsFiltrados])
+
+  // Datos para gráfico de torta - Estados (usando datos filtrados)
+  const pieData = useMemo(() => [
+    { name: 'Pendientes', value: stats.pendientes, color: COLORS.PENDIENTE },
+    { name: 'Aprobadas', value: stats.aprobadas, color: COLORS.APROBADA },
+    { name: 'Rechazadas', value: stats.rechazadas, color: COLORS.RECHAZADA }
+  ].filter(item => item.value > 0), [stats])
+
+  // Servidores más solicitados (usando datos filtrados)
+  const servidoresMasSolicitados = useMemo(() => {
+    const counts: Record<string, number> = {}
+    requestsFiltrados.forEach(r => {
+      counts[r.servidor] = (counts[r.servidor] || 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([servidor, cantidad]) => ({ servidor, cantidad }))
+      .sort((a, b) => b.cantidad - a.cantidad)
+      .slice(0, 5)
+  }, [requestsFiltrados])
+
+  // Solicitudes por semestre (usando datos filtrados)
+  const porSemestre = useMemo(() => {
+    const counts: Record<string, number> = {}
+    requestsFiltrados.forEach(r => {
+      counts[r.semestre] = (counts[r.semestre] || 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([semestre, cantidad]) => ({ semestre, cantidad }))
+      .sort((a, b) => a.semestre.localeCompare(b.semestre))
+  }, [requestsFiltrados])
+
   // Semestres únicos para el filtro
   const semestresUnicos = useMemo(() => {
     const semestres = new Set([
@@ -99,9 +103,83 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
     return Array.from(semestres).filter(Boolean).sort().reverse()
   }, [requests, arduinoRequests])
 
+  // Función para exportar a PDF
+  const exportarPDF = async () => {
+    if (!reportRef.current) return
+    
+    setExportando(true)
+    
+    try {
+      // Capturar el contenido del reporte
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      
+      const imgWidth = 210 // A4 width in mm
+      const pageHeight = 297 // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      let heightLeft = imgHeight
+      let position = 0
+      
+      // Agregar primera página
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+      
+      // Agregar páginas adicionales si es necesario
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+      }
+      
+      // Generar nombre del archivo con fecha y filtros
+      const fecha = new Date().toISOString().split('T')[0]
+      const filtro = filtroSemestre ? `_${filtroSemestre}` : ''
+      const tipo = historialTab === 'servidores' ? 'Servidores' : 'Arduino'
+      const nombreArchivo = `Reporte_${tipo}${filtro}_${fecha}.pdf`
+      
+      pdf.save(nombreArchivo)
+      alert('✅ Reporte exportado exitosamente')
+    } catch (error) {
+      console.error('Error al exportar PDF:', error)
+      alert('❌ Error al exportar el reporte')
+    } finally {
+      setExportando(false)
+    }
+  }
+
   return (
     <div>
-      <h2>Reportes y Métricas</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h2 style={{ margin: 0 }}>Reportes y Métricas</h2>
+        <button 
+          onClick={exportarPDF}
+          disabled={exportando}
+          className="primary"
+          style={{ 
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.95rem'
+          }}
+        >
+          {exportando ? (
+            <>⏳ Generando PDF...</>
+          ) : (
+            <>📄 Exportar a PDF</>
+          )}
+        </button>
+      </div>
+
+      <div ref={reportRef}>
 
       {/* Historial Completo de Solicitudes - ARRIBA */}
       <div style={{ marginTop: 32, marginBottom: 32 }}>
@@ -411,6 +489,7 @@ export default function Reports({ requests, arduinoRequests }: { requests: Reque
           </ResponsiveContainer>
         </div>
       )}
+      </div>
     </div>
   )
 }
